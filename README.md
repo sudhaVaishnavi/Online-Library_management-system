@@ -1,25 +1,289 @@
-# Online-Library_management-system
-Online Library Management System is a simple tool for managing a library's books, borrowers, and loans. It's built on MySQL and SQL. It handles Book, Branch, Borrower, and Loan Management, tracking books, publishers, authors, branch details, borrower information, and loan records.
+CREATE DATABASE db_LibraryManagement;
+USE db_LibraryManagement;
 
-What It Does?
-1. Book Management: Keeps track of books, their publishers, and authors.
-2. Branch Management: Manages library branches, including their names and addresses.
-3. Borrower Management: Records borrower details like name, address, and contact.
-4. Loan Management: Tracks who borrowed which book, from which branch, and when.
+/* ======================= TABLES ========================*/
 
-How It Works?
-1. Database Setup: Run the SQL script to set up the database and insert sample data.
-2. Use Stored Procedures: Execute the provided stored procedures for different tasks.
-   - Check how many copies of a book are available at a specific branch.
-   - See the total number of copies of a book across all branches.
-   - Find borrowers who haven't borrowed any books.
-   - Get info on borrowers with books due on a certain date.
-   - See the total number of loans per branch.
-   - Find borrowers who've borrowed more than five books.
-3. Customize Modify or extend the stored procedures for your specific needs.
+CREATE TABLE IF NOT EXISTS tbl_publisher (
+    publisher_PublisherName VARCHAR(100) PRIMARY KEY NOT NULL,
+    publisher_PublisherAddress VARCHAR(200) NOT NULL,
+    publisher_PublisherPhone VARCHAR(50) NOT NULL
+);
+CREATE TABLE IF NOT EXISTS tbl_book (
+    book_BookID INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    book_Title VARCHAR(100) NOT NULL,
+    book_PublisherName VARCHAR(100) NOT NULL,
+    FOREIGN KEY (book_PublisherName) REFERENCES tbl_publisher(publisher_PublisherName) ON UPDATE CASCADE ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS tbl_library_branch (
+    library_branch_BranchID INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    library_branch_BranchName VARCHAR(100) NOT NULL,
+    library_branch_BranchAddress VARCHAR(200) NOT NULL
+);
+CREATE TABLE IF NOT EXISTS tbl_borrower (
+    borrower_CardNo INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    borrower_BorrowerName VARCHAR(100) NOT NULL,
+    borrower_BorrowerAddress VARCHAR(200) NOT NULL,
+   borrower_BorrowerPhone VARCHAR(50) NOT NULL
+);
+CREATE TABLE IF NOT EXISTS tbl_book_loans (
+    book_loans_LoansID INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    book_loans_BookID INT NOT NULL,
+    book_loans_BranchID INT NOT NULL,
+    book_loans_CardNo INT NOT NULL,
+    book_loans_DateOut VARCHAR(50) NOT NULL,
+    book_loans_DueDate VARCHAR(50) NOT NULL,
+    FOREIGN KEY (book_loans_BookID) REFERENCES tbl_book(book_BookID) ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY (book_loans_BranchID) REFERENCES tbl_library_branch(library_branch_BranchID) ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY (book_loans_CardNo) REFERENCES tbl_borrower(borrower_CardNo) ON UPDATE CASCADE ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS tbl_book_copies (
+    book_copies_CopiesID INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    book_copies_BookID INT NOT NULL,
+    book_copies_BranchID INT NOT NULL,
+    book_copies_No_Of_Copies INT NOT NULL,
+    FOREIGN KEY (book_copies_BookID) REFERENCES tbl_book(book_BookID) ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY (book_copies_BranchID) REFERENCES tbl_library_branch(library_branch_BranchID) ON UPDATE CASCADE ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS tbl_book_authors (
+    book_authors_AuthorID INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    book_authors_BookID INT NOT NULL,
+    book_authors_AuthorName VARCHAR(50) NOT NULL,
+    FOREIGN KEY (book_authors_BookID) REFERENCES tbl_book(book_BookID) ON UPDATE CASCADE ON DELETE CASCADE
+);
+INSERT INTO tbl_publisher
+    (publisher_PublisherName, publisher_PublisherAddress, publisher_PublisherPhone)
+VALUES
+    ('DAW Books','375 Hudson Street, New York, NY 10014','212-366-2000'),
+    ('Viking','375 Hudson Street, New York, NY 10014','212-366-2000'),
+    ('Signet Books','375 Hudson Street, New York, NY 10014','212-366-2000'),
+    ('Chilton Books','Not Available','Not Available'),
+    ('George Allen & Unwin','83 Alexander Ln, Crows Nest NSW 2065, Australia','+61-2-8425-0100'),
+    ('Alfred A. Knopf','The Knopf Doubleday Group Domestic Rights, 1745 Broadway, New York, NY 10019','212-940-7390'),       
+    ('Bloomsbury','Bloomsbury Publishing Inc., 1385 Broadway, 5th Floor, New York, NY 10018','212-419-5300'),
+    ('Shinchosa','Oga Bldg. 8, 2-5-4 Sarugaku-cho, Chiyoda-ku, Tokyo 101-0064 Japan','+81-3-5577-6507'),
+    ('Harper and Row','HarperCollins Publishers, 195 Broadway, New York, NY 10007','212-207-7000'),
+    ('Pan Books','175 Fifth Avenue, New York, NY 10010','646-307-5745'),
+    ('Chalto & Windus','375 Hudson Street, New York, NY 10014','212-366-2000'),
+    ('Harcourt Brace Jovanovich','3 Park Ave, New York, NY 10016','212-420-5800'),
+    ('W.W. Norton',' W. W. Norton & Company, Inc., 500 Fifth Avenue, New York, New York 10110','212-354-5500'),
+    ('Scholastic','557 Broadway, New York, NY 10012','800-724-6527'),
+    ('Bantam','375 Hudson Street, New York, NY 10014','212-366-2000'),
+    ('Picador USA','175 Fifth Avenue, New York, NY 10010','646-307-5745')
+;
+INSERT INTO tbl_book
+    (book_Title, book_PublisherName)
+VALUES 
+    ('The Name of the Wind', 'DAW Books'),
+    ('It', 'Viking'),
+    ('The Green Mile', 'Signet Books'),
+    ('Dune', 'Chilton Books'),
+    ('The Hobbit', 'George Allen & Unwin'),
+    ('Eragon', 'Alfred A. Knopf'),
+    ('A Wise Mans Fear', 'DAW Books'),
+    ('Harry Potter and the Philosophers Stone', 'Bloomsbury'),
+    ('Hard Boiled Wonderland and The End of the World', 'Shinchosa'),
+    ('The Giving Tree', 'Harper and Row'),
+    ('The Hitchhikers Guide to the Galaxy', 'Pan Books'),
+    ('Brave New World', 'Chalto & Windus'),
+    ('The Princess Bride', 'Harcourt Brace Jovanovich'),
+    ('Fight Club', 'W.W. Norton'),
+    ('Holes', 'Scholastic'),
+    ('Harry Potter and the Chamber of Secrets', 'Bloomsbury'),
+    ('Harry Potter and the Prisoner of Azkaban', 'Bloomsbury'),
+    ('The Fellowship of the Ring', 'George Allen & Unwin'),
+    ('A Game of Thrones', 'Bantam'),
+    ('The Lost Tribe', 'Picador USA')
+;
+INSERT INTO tbl_library_branch
+    (library_branch_BranchName, library_branch_BranchAddress)
+VALUES
+    ('Sharpstown', '32 Corner Road, New York, NY 10012'),
+    ('Central', '491 3rd Street, New York, NY 10014'),
+    ('Saline', '40 State Street, Saline, MI 48176'),
+    ('Ann Arbor', '101 South University, Ann Arbor, MI 48104');
+    INSERT INTO tbl_borrower
+    (borrower_BorrowerName, borrower_BorrowerAddress, borrower_BorrowerPhone)
+VALUES
+    ('Joe Smith', '1321 4th Street, New York, NY 10014', '212-312-1234'),
+    ('Jane Smith', '1321 4th Street, New York, NY 10014', '212-931-4124'),
+    ('Tom Li', '981 Main Street, Ann Arbor, MI 48104', '734-902-7455'),
+    ('Angela Thompson', '2212 Green Avenue, Ann Arbor, MI 48104', '313-591-2122'),
+    ('Harry Emnace', '121 Park Drive, Ann Arbor, MI 48104', '412-512-5522'),
+    ('Tom Haverford', '23 75th Street, New York, NY 10014', '212-631-3418'),
+    ('Haley Jackson', '231 52nd Avenue New York, NY 10014', '212-419-9935'),
+    ('Michael Horford', '653 Glen Avenue, Ann Arbor, MI 48104', '734-998-1513');
+    INSERT INTO tbl_book_loans
+    (book_loans_BookID, book_loans_BranchID, book_loans_CardNo, book_loans_DateOut, book_loans_DueDate)
+VALUES
+    ('1', '1', '100', '1/1/18', '2/2/18'),
+    ('2', '1', '100', '1/1/18', '2/2/18'),
+    ('3', '1', '100', '1/1/18', '2/2/18'),
+    ('4', '1', '100', '1/1/18', '2/2/18'),
+    ('5', '1', '102', '1/3/18', '2/3/18'),
+    ('6', '1', '102', '1/3/18', '2/3/18'),
+    ('7', '1', '102', '1/3/18', '2/3/18'),
+    ('8', '1', '102', '1/3/18', '2/3/18'),
+    ('9', '1', '102', '1/3/18', '2/3/18'),
+    ('11', '1', '102', '1/3/18', '2/3/18'),
+    ('12', '2', '105', '12/12/17', '1/12/18'),
+    ('10', '2', '105', '12/12/17', '1/12/17'),
+    ('20', '2', '105', '2/3/18', '3/3/18'),
+    ('18', '2', '105', '1/5/18', '2/5/18'),
+    ('19', '2', '105', '1/5/18', '2/5/18'),
+    ('19', '2', '100', '1/3/18', '2/3/18'),
+    ('11', '2', '106', '1/7/18', '2/7/18'),
+    ('1', '2', '106', '1/7/18', '2/7/18'),
+    ('2', '2', '100', '1/7/18', '2/7/18'),
+    ('3', '2', '100', '1/7/18', '2/7/18'),
+    ('5', '2', '105', '12/12/17', '1/12/18'),
+    ('4', '3', '103', '1/9/18', '2/9/18'),
+    ('7', '3', '102', '1/3/18', '2/3/18'),
+    ('17', '3', '102', '1/3/18', '2/3/18'),
+    ('16', '3', '104', '1/3/18', '2/3/18'),
+    ('15', '3', '104', '1/3/18', '2/3/18'),
+    ('15', '3', '107', '1/3/18', '2/3/18'),
+    ('14', '3', '104', '1/3/18', '2/3/18'),
+    ('13', '3', '107', '1/3/18', '2/3/18'),
+    ('13', '3', '102', '1/3/18', '2/3/18'),
+    ('19', '3', '102', '12/12/17', '1/12/18'),
+    ('20', '4', '103', '1/3/18', '2/3/18'),
+    ('1', '4', '102', '1/12/18', '2/12/18'),
+    ('3', '4', '107', '1/3/18', '2/3/18'),
+    ('18', '4', '107', '1/3/18', '2/3/18'),
+    ('12', '4', '102', '1/4/18', '2/4/18'),
+    ('11', '4', '103', '1/15/18', '2/15/18'),
+    ('9', '4', '103', '1/15/18', '2/15/18'),
+    ('7', '4', '107', '1/1/18', '2/2/18'),
+    ('4', '4', '103', '1/1/18', '2/2/18'),
+    ('1', '4', '103', '2/2/17', '3/2/18'),
+    ('20', '4', '103', '1/3/18', '2/3/18'),
+    ('1', '4', '102', '1/12/18', '2/12/18'),
+    ('3', '4', '107', '1/13/18', '2/13/18'),
+    ('18', '4', '107', '1/13/18', '2/13/18'),
+    ('12', '4', '102', '1/14/18', '2/14/18'),
+    ('11', '4', '103', '1/15/18', '2/15/18'),
+    ('9', '4', '103', '1/15/18', '2/15/18'),
+    ('7', '4', '107', '1/19/18', '2/19/18'),
+    ('4', '4', '103', '1/19/18', '2/19/18'),
+    ('1', '4', '103', '1/22/18', '2/22/18');
 
-How to Use?
+/* Insert data into tbl_book_copies */
+INSERT INTO tbl_book_copies
+    (book_copies_BookID, book_copies_BranchID, book_copies_No_Of_Copies)
+VALUES
+    ('1', '1', '5'),
+    ('2', '1', '5'),
+    ('3', '1', '5'),
+    ('4', '1', '5'),
+    ('5', '1', '5'),
+    ('6', '1', '5'),
+    ('7', '1', '5'),
+    ('8', '1', '5'),
+    ('9', '1', '5'),
+    ('10', '1', '5'),
+    ('11', '1', '5'),
+    ('12', '2', '5'),
+    ('13', '2', '5'),
+    ('14', '2', '5'),
+    ('15', '2', '5'),
+    ('16', '2', '5'),
+    ('17', '2', '5'),
+    ('18', '2', '5'),
+    ('19', '2', '5'),
+    ('20', '2', '5');
+    
+DELIMITER //
 
-1. Set Up Database: Create the db_LibraryManagement database and execute the provided SQL code.
-2. Run Procedures: Execute the stored procedures using your preferred MySQL client.
-3. Customize: Adjust the procedures or add new ones according to your requirements.
+CREATE PROCEDURE bookCopiesAtAllSharpstown (
+    IN bookTitle VARCHAR(100),
+    IN branchName VARCHAR(100)
+)
+BEGIN
+    SELECT copies.book_copies_BranchID AS Branch ID, 
+           branch.library_branch_BranchName AS Branch Name,
+           copies.book_copies_No_Of_Copies AS Number of Copies,
+           book.book_Title AS Book Title
+    FROM tbl_book_copies AS copies
+    INNER JOIN tbl_book AS book ON copies.book_copies_BookID = book.book_BookID
+    INNER JOIN tbl_library_branch AS branch ON copies.book_copies_BranchID = branch.library_branch_BranchID
+    WHERE book.book_Title = bookTitle AND branch.library_branch_BranchName = branchName;
+END //
+
+DELIMITER ;
+DELIMITER //
+
+CREATE PROCEDURE bookCopiesAtAllBranches (
+    IN bookTitle VARCHAR(100)
+)
+BEGIN
+    SELECT branch.library_branch_BranchName AS Branch Name,
+           COUNT(copies.book_copies_BranchID) AS Total Copies
+    FROM tbl_book_copies AS copies
+    INNER JOIN tbl_book AS book ON copies.book_copies_BookID = book.book_BookID
+    INNER JOIN tbl_library_branch AS branch ON copies.book_copies_BranchID = branch.library_branch_BranchID
+    WHERE book.book_Title = bookTitle
+    GROUP BY branch.library_branch_BranchName;
+END //
+
+DELIMITER ;
+DELIMITER //
+
+CREATE PROCEDURE NoLoans ()
+BEGIN
+    SELECT borrower_BorrowerName
+    FROM tbl_borrower
+    WHERE NOT EXISTS (
+        SELECT *
+        FROM tbl_book_loans
+        WHERE book_loans_CardNo = borrower_CardNo
+    );
+END //
+
+DELIMITER ;
+DELIMITER //
+
+CREATE PROCEDURE LoanersInfo ()
+BEGIN
+    DECLARE dueDate VARCHAR(50);
+    SET dueDate = CURDATE();
+    
+    SELECT Branch.library_branch_BranchName AS Branch Name,  
+           Book.book_Title AS Book Name,
+           Borrower.borrower_BorrowerName AS Borrower Name, 
+           Borrower.borrower_BorrowerAddress AS Borrower Address,
+           Loans.book_loans_DateOut AS Date Out, 
+           Loans.book_loans_DueDate AS Due Date
+    FROM tbl_book_loans AS Loans
+    INNER JOIN tbl_book AS Book ON Loans.book_loans_BookID = Book.book_BookID
+    INNER JOIN tbl_borrower AS Borrower ON Loans.book_loans_CardNo = Borrower.borrower_CardNo
+    INNER JOIN tbl_library_branch AS Branch ON Loans.book_loans_BranchID = Branch.library_branch_BranchID
+    WHERE Loans.book_loans_DueDate = dueDate AND Branch.library_branch_BranchName = 'Sharpstown';
+END //
+
+DELIMITER ;
+DELIMITER //
+
+CREATE PROCEDURE TotalLoansPerBranch ()
+BEGIN
+    SELECT Branch.library_branch_BranchName AS Branch Name, 
+           COUNT(Loans.book_loans_BranchID) AS Total Loans
+    FROM tbl_book_loans AS Loans
+    INNER JOIN tbl_library_branch AS Branch ON Loans.book_loans_BranchID = Branch.library_branch_BranchID
+    GROUP BY Branch.library_branch_BranchName;
+END //
+
+DELIMITER ;
+DELIMITER //
+
+CREATE PROCEDURE BooksLoanedOut ()
+BEGIN
+    SELECT Borrower.borrower_BorrowerName AS Borrower Name, 
+           Borrower.borrower_BorrowerAddress AS Borrower Address,
+           COUNT(Borrower.borrower_BorrowerName) AS Books Checked Out
+    FROM tbl_book_loans AS Loans
+    INNER JOIN tbl_borrower AS Borrower ON Loans.book_loans_CardNo = Borrower.borrower_CardNo
+    GROUP BY Borrower.borrower_BorrowerName, Borrower.borrower_BorrowerAddress
+    HAVING COUNT(Borrower.borrower_BorrowerName) > 5;
+END //
+
+DELIMITER ;
