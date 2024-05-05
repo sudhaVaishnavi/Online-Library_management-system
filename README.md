@@ -17,7 +17,7 @@ How It Works?
    - Get info on borrowers with books due on a certain date.
    - See the total number of loans per branch.
    - Find borrowers who've borrowed more than five books.
-3. **Customize Modify or extend the stored procedures for your specific needs.
+3. Customize Modify or extend the stored procedures for your specific needs.
 
 How to Use?
 
