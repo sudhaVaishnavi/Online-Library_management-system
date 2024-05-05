@@ -1,7 +1,7 @@
 CREATE DATABASE db_LibraryManagement;
 USE db_LibraryManagement;
 
-/* ======================= TABLES ========================*/
+/* ======================= TABLES =======================*/
 
 CREATE TABLE IF NOT EXISTS tbl_publisher (
     publisher_PublisherName VARCHAR(100) PRIMARY KEY NOT NULL,
@@ -287,3 +287,35 @@ BEGIN
 END //
 
 DELIMITER ;
+
+/* ======================= Query for sample =======================*/
+
+SELECT *
+FROM db_LibraryManagement.tbl_publisher
+WHERE publisher_PublisherName LIKE 'A%';
+DROP VIEW IF EXISTS BooksPublishedByNYPublishers;
+
+
+CREATE VIEW BooksPublishedByNYPublishers AS
+SELECT b.*
+FROM db_LibraryManagement.tbl_book b
+JOIN db_LibraryManagement.tbl_publisher p ON b.book_PublisherName = p.publisher_PublisherName
+WHERE p.publisher_PublisherAddress LIKE '%New York%';
+SELECT *
+FROM BooksPublishedByNYPublishers;
+SELECT *
+FROM db_LibraryManagement.tbl_book
+WHERE book_PublisherName IN (
+    SELECT publisher_PublisherName
+    FROM db_LibraryManagement.tbl_publisher
+    WHERE publisher_PublisherName LIKE 'B%'
+);
+SELECT b.book_Title AS Book_Title, SUM(c.book_copies_No_Of_Copies) AS Total_Copies
+FROM tbl_book_copies c
+INNER JOIN tbl_book b ON c.book_copies_BookID = b.book_BookID
+GROUP BY b.book_Title;
+SELECT b.borrower_BorrowerName AS Borrower_Name, b.borrower_BorrowerAddress AS Borrower_Address
+FROM tbl_borrower b
+INNER JOIN tbl_book_loans bl ON b.borrower_CardNo = bl.book_loans_CardNo
+WHERE bl.book_loans_DueDate < CURDATE();
+
